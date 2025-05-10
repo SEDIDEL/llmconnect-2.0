@@ -1,0 +1,174 @@
+disabled_rules:
+  - trailing_whitespace
+  - todo
+  - comment_spacing
+
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - redundant_nil_coalescing
+  - redundant_optional_initialization
+  - unused_import
+  - first_where
+  - last_where
+  - closure_spacing
+  - unneeded_parentheses_in_closure_argument
+  - vertical_parameter_alignment_on_call
+  - implicit_return
+  - unavailable_function
+  - fatal_error_message
+  - file_name
+  - prohibited_interface_builder
+  - prefer_self_type_over_type_of_self
+  - force_unwrapping
+  - private_action
+  - private_outlet
+  - implicitly_unwrapped_optional
+  - pattern_matching_keywords
+  - unowned_variable_capture
+  - yoda_condition
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - no_magic_numbers
+  - multiline_parameters
+  - multiline_function_chains
+  - lower_acl_than_parent
+  - no_extension_access_modifier
+  - toggle_bool
+  - array_init
+  - direct_return
+  - joined_default_parameter
+  - expirable_todo
+  - modifier_order
+  - prefer_zero_over_explicit_init
+  - void_return
+  - convenience_type
+
+included:
+  - Sources
+  - Tests
+
+excluded:
+  - Pods
+  - Carthage
+  - DerivedData
+  - .build
+  - Tests/TestData
+  - Packages
+  - "**/Generated/"
+  - "**/*.generated.swift"
+
+# Rules configuration
+line_length:
+  warning: 120
+  error: 150
+  ignores_comments: true
+  ignores_urls: true
+
+function_body_length:
+  warning: 60
+  error: 100
+
+cyclomatic_complexity:
+  warning: 10
+  error: 20
+
+type_body_length:
+  warning: 300
+  error: 500
+
+file_length:
+  warning: 400
+  error: 700
+  ignore_comment_only_lines: true
+
+nesting:
+  type_level:
+    warning: 3
+    error: 5
+  statement_level:
+    warning: 5
+    error: 7
+
+identifier_name:
+  min_length: 2
+  max_length: 40
+  excluded: 
+    - id
+    - URL
+    - url
+    - x
+    - y
+    - z
+    - i
+    - j
+    - k
+    - to
+    - at
+
+function_parameter_count:
+  warning: 6
+  error: 8
+
+large_tuple:
+  warning: 3
+  error: 5
+
+implicitly_unwrapped_optional:
+  mode: all_except_iboutlets
+
+trailing_comma:
+  mandatory_comma: true
+
+modifier_order:
+  preferred_modifier_order:
+    - acl
+    - setterACL
+    - override
+    - dynamic
+    - mutators
+    - lazy
+    - final
+    - required
+    - convenience
+    - typeMethods
+    - owned
+
+closure_end_indentation: error
+closure_spacing: error
+attributes: error
+empty_enum_arguments: error
+empty_count: error
+empty_string: error
+enum_case_associated_values_count:
+  warning: 5
+  error: 7
+
+force_unwrapping: error
+
+custom_rules:
+  prohibit_print:
+    name: "Prohibit print"
+    regex: "\\bprint\\("
+    message: "Use a logger for debugging purposes, not print."
+    severity: warning
+    
+  prohibit_ternary_operator:
+    name: "Prohibit Ternary Operator for Complex Logic"
+    regex: "\\w+ \\? ((?!\\w+ : \\w+).)*"
+    message: "Use if-else for complex conditionals instead of ternary operators."
+    severity: warning
+    
+  blank_line_after_guard:
+    name: "Blank line after guard statement"
+    regex: "\\}\\s*(?:let|var|func|enum|struct|class|return|if|guard|switch)"
+    message: "Add a blank line after a guard statement."
+    severity: warning
+    
+  prohibit_force_cast:
+    name: "Prohibit Force Cast"
+    regex: "as!"
+    message: "Force cast should be avoided. Use conditional cast (as?) instead."
+    severity: error
+
+reporter: "xcode" 

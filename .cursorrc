@@ -1,0 +1,82 @@
+{
+  "formatOnSave": true,
+  "editor": {
+    "formatOnSave": true,
+    "defaultFormatter": "swiftformat",
+    "tabSize": 4,
+    "insertSpaces": true,
+    "rulers": [120],
+    "bracketPairColorization": true,
+    "guides": true,
+    "indentSize": 4,
+    "insertFinalNewline": true,
+    "trimTrailingWhitespace": true
+  },
+  "terminal": {
+    "integrated": true,
+    "defaultProfile": "zsh",
+    "fontSize": 12
+  },
+  "swift": {
+    "format": {
+      "useTabs": false,
+      "indentWidth": 4,
+      "lineLength": 120,
+      "respectsExistingLineBreaks": true,
+      "lineBreakBeforeControlFlowKeywords": true,
+      "lineBreakBeforeEachArgument": true
+    },
+    "lint": {
+      "enabled": true,
+      "useSwiftLint": true,
+      "configFile": ".swiftlint.yml"
+    }
+  },
+  "git": {
+    "enableSmartCommit": true,
+    "autofetch": true,
+    "confirmSync": true,
+    "inputValidation": "warn"
+  },
+  "search": {
+    "exclude": {
+      "Pods": true,
+      "Carthage": true,
+      "build": true,
+      "DerivedData": true,
+      "*.xcodeproj": true,
+      "*.xcworkspace": true
+    },
+    "followSymlinks": false
+  },
+  "explorer": {
+    "openEditors": {
+      "visible": 5,
+      "dynamicHeight": true
+    },
+    "autoReveal": true
+  },
+  "workbench": {
+    "colorTheme": "Default Dark+",
+    "iconTheme": "vs-seti",
+    "tree": {
+      "indent": 16,
+      "renderIndentGuides": true
+    },
+    "statusBar": {
+      "visible": true
+    },
+    "activityBar": {
+      "visible": true
+    }
+  },
+  "telemetry": {
+    "enableTelemetry": false
+  },
+  "ai": {
+    "enableChat": true,
+    "inlineCompletions": true,
+    "completionsModel": "claude-3-sonnet-20240229",
+    "contextSize": "large"
+  }
+} 

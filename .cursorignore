@@ -1,0 +1,70 @@
+# Build artifacts
+build/
+DerivedData/
+*.build/
+
+# Dependency directories
+Pods/
+Carthage/
+.swiftpm/
+.build/
+
+# Generated files
+*.generated.swift
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+*.xcworkspace/*
+!*.xcworkspace/contents.xcworkspacedata
+xcuserdata/
+
+# Environment & secrets
+.env
+.env.*
+*.xcconfig
+!Base.xcconfig
+!Development.xcconfig
+!Staging.xcconfig
+!Production.xcconfig
+
+# SwiftData and CoreData
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.xcdatamodeld/*
+!*.xcdatamodeld/*.xcdatamodel/
+*.xcmappingmodel/
+
+# Logs
+*.log
+logs/
+
+# macOS specific
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Test artifacts
+TestData/generated/
+
+# Documentation artifacts
+docs/build/
+docc_build/
+
+# Swift Package Manager
+.build/
+Package.resolved
+
+# Swift linting artifacts
+.swiftlint-report.json
+
+# Generated localizations
+*.strings.out
+
+# Miscellaneous
+*.bak
+*.tmp
+*.swp
+*.swo 

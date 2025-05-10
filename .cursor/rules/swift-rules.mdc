@@ -1,0 +1,132 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Cursor Rules for LLMConnect 2.0 Development
+
+## Overview
+These Cursor Rules provide guidelines for AI-assisted development of the LLMConnect 2.0 iOS application. They ensure consistency, best practices, and proper architecture throughout the development process.
+
+## Architecture & Structure
+
+### Project Structure
+```
+LLMConnect/
+├─ Sources/
+│  ├─ App/
+│  ├─ Core/
+│  ├─ Domain/
+│  ├─ Data/
+│  ├─ Presentation/
+│  └─ Features/
+├─ Resources/
+└─ Tests/
+```
+
+- Follow Clean Architecture principles with MVVM-C pattern
+- Organize code by feature after architectural layer
+- Maintain strict separation between layers with unidirectional dependencies
+- Use modular components that can be extracted to packages as the app grows
+
+### Coding Style
+- Use Swift's latest features and Swift Concurrency
+- Follow Swift API Design Guidelines for naming and structure
+- Prefer value types (structs) over reference types when appropriate
+- Use protocol-oriented programming for better testability
+- Implement proper error handling with Result types or async/await throws
+
+## Swift & SwiftUI Best Practices
+
+### State Management
+- Use `@Observable` for view models instead of older property wrappers
+- Apply `@State` only for local view state that doesn't need to be shared
+- Implement `@Binding` for two-way data flow between parent and child views
+- Use `@Environment` for dependencies and values needed throughout the app
+
+### UI Development
+- Prioritize SwiftUI over UIKit whenever possible
+- Use native SwiftUI components (List, NavigationStack, TabView, etc.)
+- Implement proper layouts with VStack, HStack, ZStack, LazyVGrid, LazyHGrid
+- Support all device sizes and orientations using GeometryReader when necessary
+- Ensure Dark Mode compatibility for all UI elements
+- Implement Dynamic Type for accessibility
+- Use SF Symbols for consistent iconography
+
+### Performance
+- Use lazy loading for large data sets with LazyVStack/LazyHGrid
+- Optimize ForEach loops with stable identifiers
+- Implement efficient network data handling with pagination
+- Profile regularly with Instruments to identify bottlenecks
+- Minimize view redrawing by keeping state at appropriate levels
+
+### Networking
+- Use URLSession with async/await for all network requests
+- Implement proper error handling and retry logic
+- Support both standard and streaming responses for AI models
+- Use protocol-based design for testability and mocking
+
+## Feature-Specific Guidelines
+
+### Chat System
+- Implement efficient message streaming
+- Use a repository pattern for chat persistence
+- Support offline message composition with later synchronization
+- Implement proper memory management for large conversations
+
+### AI Provider Integration
+- Abstract each provider behind a common interface
+- Implement provider-specific serialization/deserialization
+- Handle rate limiting and API errors gracefully
+- Support token counting and context window management
+
+### Bot Management
+- Use a factory pattern for creating different bot types
+- Support image and emoji-based bot avatars
+- Implement knowledge source integration with proper vector search
+
+### Image Generation
+- Support multiple generation models through a unified interface
+- Implement proper caching for generated images
+- Support saving to device Photos library
+- Handle generation progress and cancelation
+
+### Subscription System
+- Use StoreKit 2 for in-app purchases
+- Implement server-side receipt validation
+- Support subscription restoration
+- Provide clear subscription status and management UI
+
+## Testing & Quality Assurance
+
+### Testing
+- Write unit tests for all business logic and repositories
+- Implement UI tests for critical user flows
+- Use preview providers for SwiftUI components
+
+### Documentation
+- Document all public APIs with DocC comments
+- Provide usage examples for complex components
+- Keep README and architecture documentation updated
+
+## Don't Delete Code
+- Never remove existing code or comments unless explicitly instructed
+- Assume iterative development where existing code may be needed
+- Always preserve the original structure and intent of the code
+- Suggest improvements with clear explanations instead of removing code
+
+## Security & Privacy
+- Store sensitive data in the Keychain
+- Implement certificate pinning for API connections
+- Use proper authorization headers
+- Never log sensitive user data
+- Follow Apple's privacy best practices
+
+## Accessibility
+- Add proper VoiceOver support with meaningful labels
+- Support Dynamic Type for text scaling
+- Implement proper color contrast
+- Support Reduce Motion settings
+- Test with Accessibility Inspector
+
+These Cursor Rules are designed to ensure consistent, high-quality development of the LLMConnect 2.0 application, maintaining architectural integrity and following best practices for modern iOS development.
