@@ -14,7 +14,6 @@ struct ChatListView: View {
     @State private var newFolderName = ""
     @State private var newFolderColor = "blue"
     @State private var selectedChat: Chat? = nil
-    @State private var navigateToChat = false
 
     private let folderColors = ["blue", "green", "orange", "purple", "red", "teal", "yellow", "pink"]
     
@@ -31,13 +30,9 @@ struct ChatListView: View {
                 chatListContent
             }
         }
-        .background(
-            NavigationLink(
-                destination: selectedChat.map { ChatView(viewModel: ChatViewModel(chat: $0)) },
-                isActive: $navigateToChat,
-                label: { EmptyView() }
-            )
-        )
+        .navigationDestination(item: $selectedChat) { chat in
+            ChatView(viewModel: ChatViewModel(chat: chat))
+        }
         .navigationTitle("Chats")
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
@@ -92,11 +87,6 @@ struct ChatListView: View {
                 let newChat = viewModel.createNewChat(provider: provider, model: model)
                 selectedChat = newChat
                 showingNewChatSheet = false
-
-                // Usar DispatchQueue para asegurar que la navegación ocurra después de que se cierre la hoja
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    navigateToChat = true
-                }
             }
             .presentationDetents([.medium])
         }
