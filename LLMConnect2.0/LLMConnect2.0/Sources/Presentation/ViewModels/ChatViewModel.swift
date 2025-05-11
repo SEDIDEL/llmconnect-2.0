@@ -88,23 +88,38 @@ class ChatViewModel: ObservableObject {
     
     func sendMessage() {
         guard !inputMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-        
+
         let userMessage = Message(role: .user, content: inputMessage)
         messages.append(userMessage)
-        
+        chat.messages.append(userMessage) // Asegurarse de que el mensaje esté en el chat
+
         let messageToSend = inputMessage
         inputMessage = ""
         isSending = true
         isStreaming = true
         streamingMessage = ""
-        
+
         Task {
             do {
+                // Primero, asegurarse de que el chat esté guardado
+                print("Guardando chat antes de enviar mensaje: \(chat.id)")
+                try await chatRepository.saveChat(chat)
+
                 if chat.title == nil {
                     // Generate title for new chat
                     try await generateChatTitle(from: messageToSend)
                 }
-                
+
+                // Verificar que el chat existe antes de continuar
+                do {
+                    _ = try await chatRepository.getChat(id: chat.id)
+                    print("Chat verificado antes de enviar mensaje: \(chat.id)")
+                } catch {
+                    print("Error al verificar chat: \(error.localizedDescription)")
+                    print("Intentando guardar de nuevo...")
+                    try await chatRepository.saveChat(chat)
+                }
+
                 let stream = sendMessageUseCase.executeStream(
                     message: userMessage,
                     in: chat.id

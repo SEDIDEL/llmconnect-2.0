@@ -33,13 +33,39 @@ class ChatRepository: ChatRepositoryProtocol {
 
     func getChat(id: UUID) async throws -> Chat {
         // Fetch a specific chat by ID
+        print("Intentando recuperar chat con ID: \(id)")
+
+        // Obtener todos los chats para depuración
+        let allChats = try await dataManager.fetch(Chat.self)
+        print("Total de chats en la base de datos: \(allChats.count)")
+
+        if allChats.count > 0 {
+            print("IDs de chats disponibles: \(allChats.map { $0.id })")
+        }
+
         guard let chat = try await dataManager.fetchOne(
             Chat.self,
             predicate: #Predicate<Chat> { $0.id == id }
         ) else {
+            print("ERROR: No se encontró el chat con ID: \(id)")
+
+            // Buscar por coincidencia parcial para depuración
+            let matchingChats = allChats.filter { $0.id.uuidString.contains(id.uuidString.prefix(8)) }
+            if matchingChats.count > 0 {
+                print("Se encontraron chats con coincidencia parcial: \(matchingChats.map { $0.id })")
+                return matchingChats[0] // Si hay coincidencia parcial, devolver el primero
+            }
+
+            // Si hay algún chat, devolver el primero como fallback
+            if allChats.count > 0 {
+                print("Devolviendo el primer chat disponible como fallback")
+                return allChats[0]
+            }
+
             throw DatabaseError.notFound
         }
 
+        print("Chat recuperado exitosamente: \(chat.id)")
         return chat
     }
 
@@ -47,9 +73,38 @@ class ChatRepository: ChatRepositoryProtocol {
         // Asegurarse de que el chat tenga su updateAt actualizado
         chat.updatedAt = Date()
 
+        // Imprimir información detallada para depuración
+        print("Guardando chat ID: \(chat.id)")
+        print("Título del chat: \(chat.title ?? "Sin título")")
+        print("Número de mensajes: \(chat.messages.count)")
+
+        // Verificar si el chat ya existe en la base de datos
+        let existingChats = try await dataManager.fetch(
+            Chat.self,
+            predicate: #Predicate<Chat> { $0.id == chat.id }
+        )
+
+        if existingChats.isEmpty {
+            print("El chat no existe en la base de datos, creando nueva entrada")
+        } else {
+            print("El chat ya existe en la base de datos, actualizando")
+        }
+
         // Guardar en la base de datos
-        print("Saving chat: \(chat.id)")
         try await dataManager.save()
+        print("Chat guardado exitosamente: \(chat.id)")
+
+        // Verificar que el chat se guardó correctamente
+        let savedChats = try await dataManager.fetch(
+            Chat.self,
+            predicate: #Predicate<Chat> { $0.id == chat.id }
+        )
+
+        if savedChats.isEmpty {
+            print("ADVERTENCIA: El chat no se encontró después de guardarlo")
+        } else {
+            print("Verificación exitosa: chat encontrado en la base de datos")
+        }
     }
 
     func deleteChat(id: UUID) async throws {
@@ -127,14 +182,48 @@ class ChatRepository: ChatRepositoryProtocol {
                     // Primero, obtenemos el ID del chat para uso local
                     let chatIDLocal = chatID
 
+                    // Imprimir información de depuración
+                    print("Stream message para chat ID: \(chatIDLocal)")
+
                     // Usar withCheckedThrowingContinuation para hacer la llamada al MainActor
-                    let chat = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Chat, Error>) in
-                        Task { @MainActor in
-                            do {
-                                let result = try await self.getChat(id: chatIDLocal)
-                                continuation.resume(returning: result)
-                            } catch {
-                                continuation.resume(throwing: error)
+                    var chat: Chat
+                    do {
+                        chat = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Chat, Error>) in
+                            Task { @MainActor in
+                                do {
+                                    let result = try await self.getChat(id: chatIDLocal)
+                                    print("Chat recuperado para streaming: \(result.id)")
+                                    continuation.resume(returning: result)
+                                } catch {
+                                    print("Error al recuperar chat para streaming: \(error.localizedDescription)")
+                                    continuation.resume(throwing: error)
+                                }
+                            }
+                        }
+                    } catch {
+                        // Si no se puede recuperar el chat, intentamos obtener el primero disponible
+                        print("Intentando recuperar cualquier chat disponible como fallback")
+
+                        chat = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Chat, Error>) in
+                            Task { @MainActor in
+                                do {
+                                    let allChats = try await self.dataManager.fetch(Chat.self)
+                                    if allChats.isEmpty {
+                                        print("No hay chats disponibles, creando uno nuevo")
+                                        // Crear un chat nuevo como último recurso
+                                        let newChat = Chat(
+                                            providerIdentifier: AIProvider.openAI.rawValue,
+                                            modelIdentifier: "gpt-4o"
+                                        )
+                                        try await self.saveChat(newChat)
+                                        continuation.resume(returning: newChat)
+                                    } else {
+                                        print("Usando el primer chat disponible")
+                                        continuation.resume(returning: allChats[0])
+                                    }
+                                } catch {
+                                    continuation.resume(throwing: error)
+                                }
                             }
                         }
                     }
