@@ -8,21 +8,15 @@
 import Foundation
 import Combine
 
-enum APIError: Error {
-    case invalidURL
-    case invalidResponse
-    case httpError(statusCode: Int, data: Data)
-    case decodingError(Error)
-    case missingAPIKey
-    case invalidProvider
-    case streamingNotSupported
+// Extender las enumeraciones existentes con los casos que necesitamos
+extension APIError {
+    static let missingAPIKey = NetworkError.missingAPIKey
+    static let invalidProvider = ValidationError.invalidInput(field: "Provider")
+    static let streamingNotSupported = NetworkError.connectionFailed
 }
 
-enum DatabaseError: Error {
-    case readFailed
-    case writeFailed
-    case deleteFailed
-    case notFound
+extension DatabaseError {
+    static let notFound = invalidEntity
 }
 
 @MainActor
@@ -132,8 +126,13 @@ class ChatRepository: ChatRepositoryProtocol {
             // we'll handle the main actor access safely within the task
             Task.detached {
                 do {
-                    // This needs to be run on the main actor since it accesses SwiftData
-                    let chat = try await MainActor.run { try await self.getChat(id: chatID) }
+                    // Primero, obtenemos el ID del chat para uso local
+                    let chatIDLocal = chatID
+
+                    // Luego accedemos al chat en el MainActor
+                    let chat = try await MainActor.run {
+                        try await self.getChat(id: chatIDLocal)
+                    }
 
                     // Add the user message to the chat
                     await MainActor.run {
