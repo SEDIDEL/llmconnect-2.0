@@ -183,4 +183,7 @@ enum APIError: Error {
     case invalidResponse
     case httpError(statusCode: Int, data: Data)
     case decodingError(Error)
+    case missingAPIKey
+    case invalidProvider
+    case streamingNotSupported
 }

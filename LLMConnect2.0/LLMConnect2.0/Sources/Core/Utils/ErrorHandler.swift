@@ -169,6 +169,7 @@ enum DatabaseError: Error {
     case deleteFailed
     case migrationFailed
     case corruptData
+    case notFound
     
     var localizedDescription: String {
         switch self {
@@ -184,6 +185,8 @@ enum DatabaseError: Error {
             return "Database migration failed."
         case .corruptData:
             return "Database contains corrupt data."
+        case .notFound:
+            return "Entity not found in database."
         }
     }
     
@@ -193,12 +196,14 @@ enum DatabaseError: Error {
             return "There was an issue with the app's storage. Please restart the app."
         case .corruptData:
             return "Some data appears to be corrupted. Please contact support."
+        case .notFound:
+            return "The requested information could not be found."
         }
     }
     
     var isRecoverable: Bool {
         switch self {
-        case .invalidEntity, .readFailed, .writeFailed, .deleteFailed:
+        case .invalidEntity, .readFailed, .writeFailed, .deleteFailed, .notFound:
             return true
         case .migrationFailed, .corruptData:
             return false
@@ -209,6 +214,8 @@ enum DatabaseError: Error {
         switch self {
         case .invalidEntity, .readFailed, .writeFailed, .deleteFailed:
             return .error
+        case .notFound:
+            return .warning
         case .migrationFailed, .corruptData:
             return .critical
         }

@@ -8,16 +8,7 @@
 import Foundation
 import Combine
 
-// Extender las enumeraciones existentes con los casos que necesitamos
-extension APIError {
-    static let missingAPIKey = NetworkError.missingAPIKey
-    static let invalidProvider = ValidationError.invalidInput(field: "Provider")
-    static let streamingNotSupported = NetworkError.connectionFailed
-}
-
-extension DatabaseError {
-    static let notFound = invalidEntity
-}
+// APIError y DatabaseError ya están definidos en los archivos correspondientes
 
 @MainActor
 class ChatRepository: ChatRepositoryProtocol {
@@ -129,17 +120,32 @@ class ChatRepository: ChatRepositoryProtocol {
                     // Primero, obtenemos el ID del chat para uso local
                     let chatIDLocal = chatID
 
-                    // Luego accedemos al chat en el MainActor
-                    let chat = try await MainActor.run {
-                        try await self.getChat(id: chatIDLocal)
+                    // Usar withCheckedThrowingContinuation para hacer la llamada al MainActor
+                    let chat = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Chat, Error>) in
+                        Task { @MainActor in
+                            do {
+                                let result = try await self.getChat(id: chatIDLocal)
+                                continuation.resume(returning: result)
+                            } catch {
+                                continuation.resume(throwing: error)
+                            }
+                        }
                     }
 
                     // Add the user message to the chat
-                    await MainActor.run {
-                        chat.messages.append(message)
-                        chat.updatedAt = Date()
+                    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                        Task { @MainActor in
+                            chat.messages.append(message)
+                            chat.updatedAt = Date()
+
+                            do {
+                                try await self.saveChat(chat)
+                                continuation.resume()
+                            } catch {
+                                continuation.resume(throwing: error)
+                            }
+                        }
                     }
-                    try await MainActor.run { try await self.saveChat(chat) }
 
                     // Get the provider information
                     let providerString = chat.providerIdentifier
@@ -149,10 +155,20 @@ class ChatRepository: ChatRepositoryProtocol {
 
                     // Prepare response message
                     let assistantMessage = Message(role: .assistant, content: "")
-                    await MainActor.run {
-                        chat.messages.append(assistantMessage)
+
+                    // Add message and save chat
+                    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                        Task { @MainActor in
+                            chat.messages.append(assistantMessage)
+
+                            do {
+                                try await self.saveChat(chat)
+                                continuation.resume()
+                            } catch {
+                                continuation.resume(throwing: error)
+                            }
+                        }
                     }
-                    try await MainActor.run { try await self.saveChat(chat) }
 
                     // For demonstration, we'll create a simple response
                     let response = "I'm a functional AI assistant responding in a stream. I received your message: \"\(message.content)\" and I'm here to help with any questions you have about using AI models or their integrations."
@@ -172,16 +188,24 @@ class ChatRepository: ChatRepositoryProtocol {
                         continuation.yield(chunk)
 
                         // Update the message content as we go
-                        await MainActor.run {
+                        await Task { @MainActor in
                             assistantMessage.content = fullResponse
-                        }
+                        }.value
 
                         // If this is the last character, save the chat
                         if i == response.count - 1 {
-                            await MainActor.run {
-                                chat.updatedAt = Date()
+                            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                                Task { @MainActor in
+                                    chat.updatedAt = Date()
+
+                                    do {
+                                        try await self.saveChat(chat)
+                                        continuation.resume()
+                                    } catch {
+                                        continuation.resume(throwing: error)
+                                    }
+                                }
                             }
-                            try await MainActor.run { try await self.saveChat(chat) }
                         }
 
                         // Simulate typing delay
