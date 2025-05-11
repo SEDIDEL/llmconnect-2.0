@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import OSLog
 
 // MessageChunk already conforms to Sendable in ChatRepositoryProtocol.swift
 
@@ -53,9 +54,9 @@ class ChatViewModel: ObservableObject {
         Task {
             do {
                 try await chatRepository.saveChat(chat)
-                Logger.app.debug("Chat guardado en init: \(chat.id)")
+                print("Chat guardado en init: \(chat.id)")
             } catch {
-                Logger.app.error("Error guardando chat en init: \(error.localizedDescription)")
+                print("Error guardando chat en init: \(error.localizedDescription)")
                 showError(error: error)
             }
         }

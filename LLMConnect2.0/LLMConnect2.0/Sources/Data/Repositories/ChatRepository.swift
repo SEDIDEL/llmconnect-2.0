@@ -48,7 +48,7 @@ class ChatRepository: ChatRepositoryProtocol {
         chat.updatedAt = Date()
 
         // Guardar en la base de datos
-        Logger.database.debug("Saving chat: \(chat.id)")
+        print("Saving chat: \(chat.id)")
         try await dataManager.save()
     }
 
