@@ -48,7 +48,18 @@ class ChatViewModel: ObservableObject {
         self.isPinned = chat.isPinned
         self.chatRepository = ServiceLocator.shared.resolve()
         self.sendMessageUseCase = SendMessageUseCase(chatRepository: self.chatRepository)
-        
+
+        // Asegurarse de que el chat se guarde al inicio
+        Task {
+            do {
+                try await chatRepository.saveChat(chat)
+                Logger.app.debug("Chat guardado en init: \(chat.id)")
+            } catch {
+                Logger.app.error("Error guardando chat en init: \(error.localizedDescription)")
+                showError(error: error)
+            }
+        }
+
         loadMessages()
         loadFolders()
     }

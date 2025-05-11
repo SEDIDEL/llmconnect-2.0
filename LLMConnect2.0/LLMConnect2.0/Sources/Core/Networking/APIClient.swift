@@ -117,8 +117,8 @@ protocol APIClientProtocol {
 
 class APIClient: APIClientProtocol {
     private let session: URLSession
-    private let baseURL: URL
-    
+    internal var baseURL: URL
+
     init(baseURL: URL, session: URLSession = .shared) {
         self.baseURL = baseURL
         self.session = session

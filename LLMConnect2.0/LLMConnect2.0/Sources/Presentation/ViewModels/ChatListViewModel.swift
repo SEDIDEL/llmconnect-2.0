@@ -84,24 +84,33 @@ class ChatListViewModel: ObservableObject {
     }
     
     func createNewChat(provider: AIProvider, model: String) -> Chat {
+        // Crear un nuevo chat con fecha actualizada
         let chat = Chat(
             providerIdentifier: provider.rawValue,
             modelIdentifier: model
         )
-        
+
+        // Mensajes informativos para debug
+        Logger.app.debug("Creating new chat with ID: \(chat.id)")
+        Logger.app.debug("Provider: \(provider.rawValue), Model: \(model)")
+
+        // Guardar el chat de forma asíncrona
         Task {
             do {
                 try await chatRepository.saveChat(chat)
+                Logger.app.debug("Chat saved successfully with ID: \(chat.id)")
+
                 // Use Task.yield() instead of sleep
                 await Task.yield()
                 loadChats()
             } catch {
+                Logger.app.error("Error saving chat: \(error.localizedDescription)")
                 Task { @MainActor in
                     self.errorMessage = ErrorHandler.shared.getUserFriendlyMessage(from: error)
                 }
             }
         }
-        
+
         return chat
     }
     

@@ -44,7 +44,11 @@ class ChatRepository: ChatRepositoryProtocol {
     }
 
     func saveChat(_ chat: Chat) async throws {
-        // Save the chat to SwiftData
+        // Asegurarse de que el chat tenga su updateAt actualizado
+        chat.updatedAt = Date()
+
+        // Guardar en la base de datos
+        Logger.database.debug("Saving chat: \(chat.id)")
         try await dataManager.save()
     }
 
@@ -81,8 +85,8 @@ class ChatRepository: ChatRepositoryProtocol {
             throw APIError.missingAPIKey
         }
 
-        // Prepare the request
-        let apiClient = APIClient(baseURL: provider.baseURL)
+        // Actualizar la URL base según el proveedor
+        self.apiClient.baseURL = provider.baseURL
 
         // Create a response message
         let assistantMessage = Message(role: .assistant, content: "Thinking...")
@@ -92,12 +96,15 @@ class ChatRepository: ChatRepositoryProtocol {
         // Create a sequence of all previous messages for context
         let chatHistory = chat.messages.sorted { $0.timestamp < $1.timestamp }
 
+        // Crear un saludo basado en la historia de la conversación
+        let greeting = chatHistory.count > 2 ? "Continuando nuestra conversación" : "Iniciando una nueva conversación"
+
         do {
             // This is a simplified implementation - in a real app, you would use proper API calls
             // based on the provider and handle their specific response formats
 
-            // For now, we'll create a simplified response
-            let response = "I'm a functional AI assistant. This is a response to your message: \"\(message.content)\""
+            // For now, we'll create a simplified response using the chat history
+            let response = "\(greeting). I'm a functional AI assistant. This is a response to your message: \"\(message.content)\""
             assistantMessage.content = response
             chat.updatedAt = Date()
             try await saveChat(chat)
@@ -149,9 +156,11 @@ class ChatRepository: ChatRepositoryProtocol {
 
                     // Get the provider information
                     let providerString = chat.providerIdentifier
-                    guard let provider = AIProvider(rawValue: providerString) else {
+                    guard let _ = AIProvider(rawValue: providerString) else {
                         throw APIError.invalidProvider
                     }
+
+                    // Nota: Aquí podrías usar el provider para configurar la stream response si fuera necesario
 
                     // Prepare response message
                     let assistantMessage = Message(role: .assistant, content: "")
@@ -174,26 +183,31 @@ class ChatRepository: ChatRepositoryProtocol {
                     let response = "I'm a functional AI assistant responding in a stream. I received your message: \"\(message.content)\" and I'm here to help with any questions you have about using AI models or their integrations."
 
                     // Stream the response character by character
-                    var fullResponse = ""
-                    for i in 0..<response.count {
-                        let index = response.index(response.startIndex, offsetBy: i)
-                        let char = String(response[index])
-                        fullResponse += char
+                    let responseChars = Array(response)
+                    var localResponse = ""
 
+                    for i in 0..<responseChars.count {
+                        // Crear la cadena local para este punto de la iteración
+                        localResponse += String(responseChars[i])
+
+                        // Crear el fragmento para enviar al stream
                         let chunk = MessageChunk(
                             id: UUID(),
-                            content: char,
-                            isComplete: i == response.count - 1
+                            content: String(responseChars[i]),
+                            isComplete: i == responseChars.count - 1
                         )
                         continuation.yield(chunk)
 
+                        // Capturar una copia local de la respuesta para evitar la mutación después de la captura
+                        let currentResponse = localResponse
+
                         // Update the message content as we go
                         await Task { @MainActor in
-                            assistantMessage.content = fullResponse
+                            assistantMessage.content = currentResponse
                         }.value
 
                         // If this is the last character, save the chat
-                        if i == response.count - 1 {
+                        if i == responseChars.count - 1 {
                             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
                                 Task { @MainActor in
                                     chat.updatedAt = Date()
